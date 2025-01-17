@@ -168,3 +168,11 @@ _*/
 */my_configs/*
 my_configs
 gcr_configs
+
+
+scripts/out/
+*.out
+*.err
+
+scripts/safety_result/
+trained_gpt125m_experts_colab/

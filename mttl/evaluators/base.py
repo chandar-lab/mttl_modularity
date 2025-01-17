@@ -442,6 +442,7 @@ def setup_evaluators(
     from mttl.datamodule.piqa_data_module import PiqaDataConfig
     from mttl.datamodule.superglue_data_module import SuperGLUEDataConfig
     from mttl.datamodule.winogrande_data_module import WinograndeDataConfig
+    from mttl.datamodule.safety_data_module import SafetyDataConfig
     from mttl.evaluators.arc_evaluator import ArcEvaluator
     from mttl.evaluators.bbh_evaluator import DirectBBHEvaluator, DirectBBHEvaluatorFast
     from mttl.evaluators.hellaswag_evaluator import HellaswagEvaluator
@@ -452,6 +453,7 @@ def setup_evaluators(
     from mttl.evaluators.piqa_evaluator import PiqaEvaluator
     from mttl.evaluators.superglue_evaluators import BoolQEvaluator
     from mttl.evaluators.winogrande_evaluator import WinograndeEvaluator
+    from mttl.evaluators.safety_evaluator import SafetyEvaluator
 
     evaluators = {}
     common_kwargs_ = {
@@ -483,6 +485,7 @@ def setup_evaluators(
         "openbookqa",
         "bbh-fast",
         "mmlu-fast",
+        "a-safety",
     ]:
         common_kwargs = copy.deepcopy(common_kwargs_)
         generation_kwargs = copy.deepcopy(generation_kwargs_)
@@ -609,6 +612,13 @@ def setup_evaluators(
                 MMLUDataConfig(**common_kwargs),
                 generation_kwargs=generation_kwargs,
             )
+        elif "a-safety" in task:
+            evaluators["a-safety"] = SafetyEvaluator(
+                SafetyDataConfig(**common_kwargs),
+                generation_kwargs=generation_kwargs,
+                split="test"
+            )
+
         else:
             raise ValueError("No active tasks")
 

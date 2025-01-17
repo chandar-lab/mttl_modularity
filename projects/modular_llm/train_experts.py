@@ -118,7 +118,7 @@ def train_experts(args: Args, model_class: Type[ExpertModule]):
 
     if args.pipeline_eval_tasks:
         if args.pipeline_eval_tasks == "all":
-            args.pipeline_eval_tasks = "arc-challenge,arc-easy,boolq,hellaswag,humaneval,mbpp,openbookqa,piqa,bbh-fast,winogrande"
+            args.pipeline_eval_tasks = "a-safety,arc-challenge,arc-easy,boolq,hellaswag,humaneval,mbpp,openbookqa,piqa,bbh-fast,winogrande"
 
         eval = DownstreamEvalCallback(args)
         callbacks.append(eval)
