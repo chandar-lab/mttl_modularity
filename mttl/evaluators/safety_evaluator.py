@@ -187,8 +187,8 @@ def duo_judge(QApairs, outputs_to_judge):
     reasons = [extract_content("#thereason:", content) for content in contents]
     return scores, reasons, outputs_to_judge
 
-# class SafetyEvaluator(Evaluator):
-class SafetyEvaluator(GenerativeEvaluator):
+class SafetyEvaluator(Evaluator):
+# class SafetyEvaluator(GenerativeEvaluator):
     def __init__(
         self, 
         config = None,
@@ -198,11 +198,11 @@ class SafetyEvaluator(GenerativeEvaluator):
     ):
         
 
-        super().__init__(
-            datamodule=datamodule,
-            use_vllm=False,
-            generation_kwargs=generation_kwargs,
-        )
+        # super().__init__(
+        #     datamodule=datamodule,
+        #     use_vllm=False,
+        #     generation_kwargs=generation_kwargs,
+        # )
         self.datamodule = SafetyDataModule(config, for_generation=True)
         self.gpt4_judge = gpt4_judge
         self.generation_kwargs = generation_kwargs
