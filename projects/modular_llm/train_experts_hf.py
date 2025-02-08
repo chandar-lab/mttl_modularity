@@ -54,7 +54,7 @@ def train_experts(
     callbacks = []
     if training_args.pipeline_eval_tasks:
         if training_args.pipeline_eval_tasks == "all":
-            training_args.pipeline_eval_tasks = "arc-challenge,arc-easy,boolq,hellaswag,humaneval,mbpp,openbookqa,piqa,bbh-fast,winogrande"
+            training_args.pipeline_eval_tasks = "a-safety,arc-challenge,arc-easy,boolq,hellaswag,humaneval,mbpp,openbookqa,piqa,bbh-fast,winogrande"
 
         downstream_eval_callback = DownstreamEvalCallback(module, training_args)
         callbacks.append(downstream_eval_callback)

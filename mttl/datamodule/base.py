@@ -214,6 +214,8 @@ class DefaultCollator(PackedMixin):
     )
     task_source_field: str = "task_source"
     collate_extra_fields: Optional[List] = None
+    truncation: bool = True
+    max_length: int = 64
 
     def enforce_eos(self, targets):
         # simulate the default behaviour of LLamatokenizer, when adding eos token and truncating: the last token must always be eos
@@ -282,11 +284,13 @@ class DefaultCollator(PackedMixin):
             )
         else:
             tokenized_labels = self.tokenizer(
-                labels, padding="longest", return_tensors=self.return_tensors
+                labels, padding= "max_length", 
+                # "longest", 
+                return_tensors=self.return_tensors
             )
             tokenized_sources = self.tokenizer(
                 sources,
-                padding="longest",
+                padding= "max_length", #"longest",
                 return_tensors=self.return_tensors,
                 pad_to_multiple_of=self.pad_to_multiple_of,
             )
@@ -354,12 +358,12 @@ class DefaultCollator(PackedMixin):
         else:
             tokenized_sources = self.tokenizer(
                 sources,
-                padding="longest",
+                padding="max_length" , #"longest",
                 return_tensors=self.return_tensors,
             )
             tok_sources_plus_labels = self.tokenizer(
                 [i + t for i, t in zip(sources, labels)],
-                padding="longest",
+                padding="max_length", #"longest",
                 return_tensors=self.return_tensors,
                 pad_to_multiple_of=self.pad_to_multiple_of,
             )
@@ -595,7 +599,9 @@ class DataModule(LightningDataModule, Registrable):
     def collate_fn(self):
         return self.collate_class(
             tokenizer=self.tokenizer,
-            padding="longest",
+            padding= "max_length", #
+            truncation= True, #
+            max_length= 64, #
             max_input_length=self.config.max_input_length,
             max_output_length=self.config.max_output_length,
             pad_to_multiple_of=self.config.pad_to_multiple_of,
@@ -766,7 +772,7 @@ class DataModule(LightningDataModule, Registrable):
         # return tensors is harcoded to `pt`, but tokenizer in dataset.map overwrites this
         collate_fn_ = dataclasses.replace(self.collate_fn)
         collate_fn_.pad_to_multiple_of = 1
-        collate_fn_.padding = "longest"
+        collate_fn_.padding = "max_length"#"longest"
 
         def collate_fn_wrapper(batch):
             out = collate_fn_([batch])
@@ -967,6 +973,14 @@ def get_datamodule(args, for_generation=False, dataset_override=None):
         WinograndeDataConfig,
         WinograndeMultiChoiceDataModule,
     )
+    from mttl.datamodule.safety_data_module import (
+        SafetyDataConfig,
+        SafetyDataModule,
+    )
+    from mttl.datamodule.camel_data_module import (
+        CamelDataConfig,
+        CamelDataModule,
+    )
 
     # if we have a DataArgs object, we can directly create the datamodule
     if isinstance(args, DataArgs) and args.dataset_type is not None:
@@ -1073,6 +1087,16 @@ def get_datamodule(args, for_generation=False, dataset_override=None):
             **common_kwargs,
         )
         dm = CodexDataModule(config, for_generation=for_generation)
+    elif "a-safety" in dataset:
+        config = SafetyDataConfig(
+            **common_kwargs,
+        )
+        dm = SafetyDataModule(config, for_generation=for_generation)
+    elif "camel" in dataset:
+        config = CamelDataConfig(
+            **common_kwargs,
+        )
+        dm = CamelDataModule(config, for_generation=for_generation)
     else:
         raise ValueError(f"Unknown dataset {args.dataset}")
     return dm

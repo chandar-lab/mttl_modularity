@@ -1,5 +1,6 @@
 {
     "tasks": [
+        "a-safety",
         "niv2_ethics_classification",
         "niv2_coherence_classification",
         "ultrachat_31",

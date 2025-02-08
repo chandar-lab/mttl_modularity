@@ -25,3 +25,9 @@ torch.nn.functional._default_scaled_dot_product_attention = (
     torch.nn.functional.scaled_dot_product_attention
 )
 torch.nn.functional.scaled_dot_product_attention = scaled_dot_product_attention
+
+from .arguments import *
+from mttl.arguments import ExpertConfig
+
+
+

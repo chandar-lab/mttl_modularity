@@ -328,7 +328,7 @@ def run_eval(args: EvaluationConfig):
         return
     else:
         if args.pipeline_eval_tasks == "all":
-            args.pipeline_eval_tasks = "arc-challenge,arc-easy,boolq,hellaswag,humaneval,mbpp,openbookqa,piqa,bbh-fast,winogrande"
+            args.pipeline_eval_tasks = "a-safety,arc-challenge,arc-easy,boolq,hellaswag,humaneval,mbpp,openbookqa,piqa,bbh-fast,winogrande"
 
         with torch.no_grad():
             runner: EvaluatorRunner = setup_evaluators(

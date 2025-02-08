@@ -148,4 +148,11 @@ def get_tokenizer_with_args(
 
     tokenizer.mttl_merges_space = tokenizer_merges_space(tokenizer)
     tokenizer.mttl_enforces_eos = tokenizer_enforces_eos(tokenizer)
+
+    ### 
+    tokenizer.padding = "max_length"
+    tokenizer.truncation = True
+    tokenizer.max_length = 64
+
+
     return tokenizer
