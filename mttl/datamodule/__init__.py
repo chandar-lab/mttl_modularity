@@ -21,3 +21,5 @@ from mttl.datamodule.winogrande_data_module import (
     WinograndeDataConfig,
     WinograndeMultiChoiceDataModule,
 )
+from mttl.datamodule.safety_data_module import (SafetyDataConfig, SafetyDataModule)
+from mttl.datamodule.camel_data_module import (CamelDataConfig, CamelDataModule) 

@@ -8,6 +8,12 @@ from mttl.models.library.dataset_library import DatasetLibrary
 
 class SafetyDataConfig(DatasetConfig):
     pass
+    # def __init__(
+    #     self, config):
+    #     super().__init__()
+
+    #     self.config = config
+
 
 @DataModule.register("a-safety", config_cls=SafetyDataConfig)
 class SafetyDataModule(DataModule):
@@ -37,7 +43,12 @@ class SafetyDataModule(DataModule):
             map_example,
             num_proc=n_proc,
         )
-        self.test_dataset = dataset["test"].map(
+        self.test_dataset = dataset["test"].select(range(20)).map(
             map_example,
             num_proc=n_proc,
         )
+
+
+
+
+

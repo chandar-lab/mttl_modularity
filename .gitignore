@@ -170,9 +170,15 @@ my_configs
 gcr_configs
 
 
+
 scripts/out/
+scripts/outputs/
 *.out
 *.err
 
 scripts/safety_result/
 trained_gpt125m_experts_colab/
+trained_*/
+datasets/
+outputs/
+outputs.json

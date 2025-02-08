@@ -42,6 +42,7 @@ class RougeEvaluator(GenerativeEvaluator):
         verbose=True,
         shuffle=False,
         return_predictions=False,
+        output_path=None
     ):
         dataloader = self.get_dataloader(split, subsample, shuffle=shuffle)
 
@@ -81,6 +82,15 @@ class RougeEvaluator(GenerativeEvaluator):
             all_sources.extend(sources_texts)
 
         rouge_L = np.mean(all_rougeL)
+
+        metrics = {
+            "rouge_L": float(rouge_L),
+            "references": all_references,
+            "sources": all_sources,
+            "predictions": all_predictions,
+        }
+
+        self.save_metrics(metrics, output_path)
 
         if return_predictions:
             return rouge_L, GenerationOutput(

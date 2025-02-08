@@ -9,7 +9,7 @@ from mttl.models.expert_model import ExpertModel, ExpertModelConfig
 from mttl.models.train_utils import train_model
 
 # Set this flag to True if you want to re-train the experts!
-train_library = False
+train_library = True
 
 train_config = ExpertConfig.from_dict(
     {

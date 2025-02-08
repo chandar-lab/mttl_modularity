@@ -232,7 +232,7 @@ class SafetyEvaluator(Evaluator):
                 attention_mask = None
             labels_texts = batch["labels_texts"]
             sources_texts = batch["sources_texts"]
-            predictions = self.generate_for_batch(model, batch).generated_texts
+            # predictions = self.generate_for_batch(model, batch).generated_texts
             with torch.no_grad():
                 outputs = model.generate(
                     input_ids=input_ids,
