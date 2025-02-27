@@ -59,11 +59,15 @@ def train_model(
     best_val_loss = float("inf")
     running_loss = 0.0
 
+    steps_per_epoch = len(dataloader)
+
     if wandb_run:
         wandb_run.watch(model, log="all", log_freq=100)  # Watch model parameters & gradients
 
 
     for step in bar:
+        current_epoch = step // steps_per_epoch
+
         loss_accum = 0.0
         model.train()
         optimizer.zero_grad()
@@ -94,19 +98,22 @@ def train_model(
                 torch.cuda.synchronize()
 
             bar.set_description_str(
+                f"Epoch {current_epoch+1}/{args.total_epochs}, "
                 f"Step {step + 1}/{args.total_steps},"
                 f" Loss: {running_loss / (step + 1):.4f},"
                 f" Lr: {scheduler.get_last_lr()[0]:.4f},"
                 f" Val: {best_val_loss:.4f}"
             )
 
-            # Log to wandb every N steps to reduce overhead
-            if wandb_run and step % 10 == 0:  # Log every 10 steps
+            # Log to wandb every N steps
+            if wandb_run and step % 10 == 0:
                 wandb_run.log({
                     "train/loss": running_loss / (step + 1),
                     "train/lr": scheduler.get_last_lr()[0],
-                    "train/grad_norm": norm.item()
-                }, commit=False)  # Commit=False for better efficiency
+                    "train/grad_norm": norm.item(),
+                    "train/epoch": current_epoch + 1  
+                }, commit=False)
+
 
         # eval and save best model
         if (
