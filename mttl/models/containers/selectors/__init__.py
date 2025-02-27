@@ -12,6 +12,7 @@ from mttl.models.containers.selectors.base import (
     SelectorConfig,
     TaskNameSelector,
     TaskNameSelectorConfig,
+    UniformNegation
 )
 from mttl.models.containers.selectors.moe_selector import (
     MOERKHSSelector,

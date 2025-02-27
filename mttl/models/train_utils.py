@@ -43,6 +43,8 @@ def train_model(
     if torch.cuda.is_available():
         torch.cuda.manual_seed(args.seed)
 
+    wandb_run = args.wandb
+
     (optimizer, scheduler), _ = get_optimizer_and_scheduler(
         model, args, num_train_examples=len(datamodule.train_dataset)
     )
@@ -56,6 +58,10 @@ def train_model(
     bar = tqdm(range(args.total_steps))
     best_val_loss = float("inf")
     running_loss = 0.0
+
+    if wandb_run:
+        wandb_run.watch(model, log="all", log_freq=100)  # Watch model parameters & gradients
+
 
     for step in bar:
         loss_accum = 0.0
@@ -94,6 +100,14 @@ def train_model(
                 f" Val: {best_val_loss:.4f}"
             )
 
+            # Log to wandb every N steps to reduce overhead
+            if wandb_run and step % 10 == 0:  # Log every 10 steps
+                wandb_run.log({
+                    "train/loss": running_loss / (step + 1),
+                    "train/lr": scheduler.get_last_lr()[0],
+                    "train/grad_norm": norm.item()
+                }, commit=False)  # Commit=False for better efficiency
+
         # eval and save best model
         if (
             args.eval_every > 0
@@ -101,6 +115,10 @@ def train_model(
             and datamodule.dev_dataset
         ):
             val_loss = evaluate_model(datamodule.val_dataloader(), model)
+
+            if wandb_run:
+                wandb_run.log({"val/loss": val_loss}, commit=True)  # Commit=True here
+
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 if args.output_dir:
@@ -124,5 +142,9 @@ def train_model(
     if do_test and datamodule.test_dataset:
         test_loss = evaluate_model(datamodule.test_dataloader(), model)
         logger.info(f"Test loss: {test_loss:.4f}")
+
+        if wandb_run:
+            wandb_run.log({"test/loss": test_loss})
+            
 
     return model

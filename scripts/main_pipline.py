@@ -3,7 +3,7 @@ import torch
 import copy
 import os
 import sys
-# sys.path.append(os.path.abspath('./'))
+sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('../'))
 print(os.getcwd())
 from mttl.arguments import ExpertConfig
@@ -22,7 +22,7 @@ import wandb
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from mttl.models.expert_model import ExpertModel, ExpertModelConfig
-from mttl.models.train_utils import train_model, train_sft_model
+from mttl.models.train_utils import train_model
 from functools import wraps
 from transformers import (
     AutoTokenizer,
@@ -160,9 +160,9 @@ def local_train(cfg: DictConfig):
     wandb_run.log({"evaluation/domain_score_rouge": domain_score_rouge})
     print("for bio mixed is", domain_score_rouge)
 
-    domain_score_ll = evaluator_domain_ll.evaluate(model, split="test", output_path='ll_output') ## save output to output path
-    wandb_run.log({"evaluation/domain_score_ll": domain_score_ll})
-    print("LL for bio mixed is", domain_score_ll['loglike'])
+    # domain_score_ll = evaluator_domain_ll.evaluate(model, split="test", output_path='ll_output') ## save output to output path
+    # wandb_run.log({"evaluation/domain_score_ll": domain_score_ll})
+    # print("LL for bio mixed is", domain_score_ll['loglike'])
     
     ## safety evaluation 
     evaluator_safety = SafetyEvaluator(train_config)
@@ -200,7 +200,7 @@ def train_sft(cfg, train_config, datamodule, wandb_run):
                 )
 
 
-    model = train_sft_model(train_args, cfg, wandb_run, model, tokenizer, datamodule)
+    # model = train_sft_model(train_args, cfg, wandb_run, model, tokenizer, datamodule)
 
     return model
 
