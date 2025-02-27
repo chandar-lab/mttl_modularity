@@ -1,6 +1,11 @@
 
 import torch
 import copy
+import os
+import sys
+# sys.path.append(os.path.abspath('./'))
+sys.path.append(os.path.abspath('../'))
+print(os.getcwd())
 from mttl.arguments import ExpertConfig
 from mttl.datamodule.base import get_datamodule
 from mttl.models.containers.selectors import TaskNameSelectorConfig, ArrowSelectorConfig
@@ -16,21 +21,24 @@ from mttl.models.containers.selectors import ArrowSelectorConfig
 import wandb
 import hydra
 from omegaconf import DictConfig, OmegaConf
-import os
-import os
-import sys
-sys.path.append(os.path.abspath('../'))
-import mttl.arguments
-from mttl.arguments import ExpertConfig
-from mttl.datamodule.base import get_datamodule
-from mttl.models.library.expert_library import ExpertLibrary
 from mttl.models.expert_model import ExpertModel, ExpertModelConfig
-from mttl.models.train_utils import train_model
+from mttl.models.train_utils import train_model, train_sft_model
 from functools import wraps
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    BitsAndBytesConfig,
+    TrainingArguments,
+)
 
+
+print(torch.cuda.device_count())  # Should print 4
+print([torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())])
 device = "cuda" if torch.cuda.is_available() else "cpu"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
-@hydra.main(config_name="config.yaml") #, config_name="config")
+
+@hydra.main(config_path=".", config_name="config", version_base=None)
 def local_train(cfg: DictConfig):
     # os.environ["WANDB_PROJECT"] = "gpv"
     # os.environ["WANDB_LOG_MODEL"] = "tests"
@@ -42,74 +50,161 @@ def local_train(cfg: DictConfig):
         config=OmegaConf.to_container(cfg, resolve=True)  # Log entire config
     )
 
+
     # # Model and Tokenizer
     # model_id = cfg.model.model_id
     # bnb_config = BitsAndBytesConfig(**cfg.model.bnb_config)
     # peft_config = LoraConfig(**cfg.peft)
 
+
+    # train_config = OmegaConf.to_container(train_config, resolve=True)  # Convert to a normal dict
+    # train_config["model_init_kwargs"] = train_config.get("model_init_kwargs", {})
+    
     train_config = ExpertConfig.from_dict({**cfg.train_config})
+    train_config.wandb = wandb_run
+    
 
     library = ExpertLibrary.get_expert_library(cfg.path, create=True)
 
+    # wandb_run.log({"expert_training": cfg.expert_training})
+    # wandb_run.log({"full_training": cfg.full_training})
+    # wandb_run.log({"base":})
+ 
     for task in cfg.tasks:
         # set the task name to the task we want to finetune on
         train_config.dataset = task
+        print(task)
         train_config.finetune_task_name = task
-        # initialize an expert model
-        model = ExpertModel(
-            ExpertModelConfig(
-                base_model=train_config.model,
-                expert_name=train_config.finetune_task_name,
-                task_name=train_config.finetune_task_name,
-                modifier_config=train_config.modifier_config,
-            ),
-            device_map= device,
-            precision= train_config.precision,
-        )
-        # if not os.path.exists(cfg.path.split('local://')[1]): ###
-        print("........ training .........", task)
-        # minimal training code to finetune the model on examples from the task
-        train_model(train_config, model, get_datamodule(train_config))
-        # add the expert to the library!
-        expert_instance = model.as_expert(training_config=train_config.to_dict())
-        library.add_expert(expert_instance, force=True)
+
+        if cfg.expert_training:
+            # initialize an expert model
+            model = ExpertModel(
+                ExpertModelConfig(
+                    base_model=train_config.model,
+                    expert_name=train_config.finetune_task_name,
+                    task_name=train_config.finetune_task_name,
+                    modifier_config=train_config.modifier_config,
+                ),
+                device_map= device,
+                precision= train_config.precision,
+            )
+            # if not os.path.exists(cfg.path.split('local://')[1]): ###
+            print("........ training .........", task)
+            # minimal training code to finetune the model on examples from the task
+            train_model(train_config, model, get_datamodule(train_config))
+            # add the expert to the library!
+            expert_instance = model.as_expert(training_config=train_config.to_dict())
+            library.add_expert(expert_instance, force=True)
+            # Let's see which experts are in the library... :-)
+            for expert_name in library.keys():
+                print("Expert: ", expert_name, " with config: ", library[expert_name].expert_config)
+            print("Experts in library:", len(library))
+
+        elif cfg.full_training:
+            # datamodule = get_datamodule( train_config, for_generation=True)
+            # train_sft(cfg, train_config, datamodule, wandb_run)
+            
+            # initialize an expert model
+            train_config.trainable_param_names = ".*"
+            model = ExpertModel(
+                ExpertModelConfig(
+                    base_model=train_config.model,
+                    expert_name=train_config.finetune_task_name,
+                    task_name=train_config.finetune_task_name,
+                    modifier_config= None,
+                ),
+                device_map= device,
+                precision= train_config.precision,
+            )
+            # if not os.path.exists(cfg.path.split('local://')[1]): ###
+            print("........ training .........", task)
+            # minimal training code to finetune the model on examples from the task
+            train_model(train_config, model, get_datamodule(train_config))
+            # add the expert to the library!
+            expert_instance = model.as_expert(training_config=train_config.to_dict())
+            library.add_expert(expert_instance, force=True)
+            # Let's see which experts are in the library... :-)
+            for expert_name in library.keys():
+                print("Expert: ", expert_name, " with config: ", library[expert_name].expert_config)
+            print("Experts in library:", len(library))
+        
+        else:
+            model = AutoModelForCausalLM.from_pretrained(
+                train_config.model,
+                device_map=device,
+                torch_dtype= torch.bfloat16,
+                # quantization_config=bnb_config,
+                # attn_implementation="flash_attention_2"
+            )
 
 
-    # Let's see which experts are in the library... :-)
-    for expert_name in library.keys():
-        print("Expert: ", expert_name, " with config: ", library[expert_name].expert_config)
-    print("Experts in library:", len(library))
+
 
 
     ## merged models
-    print("........ merging .........")
-    merge_experts(library_path=cfg.path, type=cfg.merging.type)
-    model_merged = MultiExpertModel.from_pretrained(f"{cfg.path}_{cfg.merging.type}", device_map="cuda", precision="32")
+    if cfg.merging.do_merge and cfg.expert_training:
+        print("........ merging .........")
+        merge_experts(library_path=cfg.path, type=cfg.merging.type)
+        # merged_model
+        model = MultiExpertModel.from_pretrained(f"{cfg.path}_{cfg.merging.type}", device_map="cuda", precision="32")
     
     ## evaluation
     # if cfg.evaluation.rouge:
     datamodule = get_datamodule(train_config, for_generation=True)
     evaluator_domain_rouge = RougeEvaluator(datamodule)
     # if cfg.evaluation.loglikelihood:  
-    datamodule = get_datamodule(train_config, for_generation=True)
     evaluator_domain_ll = LogLikeEvaluator(datamodule)
 
     print("........ evaluation .........")
-    domain_score_rouge, predictions = evaluator_domain_rouge.evaluate(model_merged, split="test", return_predictions=True, output_path='rouge_output') ## return predictions 
+    domain_score_rouge, predictions = evaluator_domain_rouge.evaluate(model, split="test", return_predictions=True, output_path='rouge_output') ## return predictions 
     wandb_run.log({"evaluation/domain_score_rouge": domain_score_rouge})
     print("for bio mixed is", domain_score_rouge)
 
-    domain_score_ll = evaluator_domain_ll.evaluate(model_merged, split="test", output_path='ll_output') ## save output to output path
+    domain_score_ll = evaluator_domain_ll.evaluate(model, split="test", output_path='ll_output') ## save output to output path
     wandb_run.log({"evaluation/domain_score_ll": domain_score_ll})
-    print("for bio mixed is", domain_score_ll)
+    print("LL for bio mixed is", domain_score_ll['loglike'])
     
     ## safety evaluation 
     evaluator_safety = SafetyEvaluator(train_config)
-    safety_score = evaluator_safety.evaluate(model_merged, split="test", output_path='safety_output') ## save output to output path
+    safety_score = evaluator_safety.evaluate(model, split="test", output_path='safety_output') ## save output to output path
     wandb_run.log({"evaluation/safety_score": safety_score})
     print("for bio mixed is", safety_score)
 
     wandb_run.finish()
+
+def train_sft(cfg, train_config, datamodule, wandb_run):
+
+    model = AutoModelForCausalLM.from_pretrained(
+                cfg.train_config.model,
+                device_map=device,
+                torch_dtype= torch.bfloat16,
+                # quantization_config=bnb_config,
+                # attn_implementation="flash_attention_2"
+            )
+
+    tokenizer = AutoTokenizer.from_pretrained(cfg.train_config.model,
+            truncation=cfg.train_config.truncation,
+            padding="max_length",
+            max_length=cfg.train_config.max_length,)
+    tokenizer.padding_side = cfg.train_config.truncation_side
+
+    train_args = TrainingArguments(
+                    output_dir=cfg.path,
+                    per_device_train_batch_size=cfg.train_config.train_batch_size,
+                    per_device_eval_batch_size=cfg.train_config.predict_batch_size,
+                    num_train_epochs=cfg.train_config.num_train_epochs,
+                    # save_strategy="epoch",
+                    # evaluation_strategy="epoch",
+                    # logging_dir="./logs",
+                    # report_to="wandb",  # Enables W&B logging
+                )
+
+
+    model = train_sft_model(train_args, cfg, wandb_run, model, tokenizer, datamodule)
+
+    return model
+
+
 
 
 
