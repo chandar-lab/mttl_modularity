@@ -981,6 +981,10 @@ def get_datamodule(args, for_generation=False, dataset_override=None):
         CamelDataConfig,
         CamelDataModule,
     )
+    from mttl.datamodule.beavertails_unsafe_module import (
+        BeaverTailsUnsafeDataConfig,
+        BeaverTailsUsafeDataModule,
+    )
 
     # if we have a DataArgs object, we can directly create the datamodule
     if isinstance(args, DataArgs) and args.dataset_type is not None:
@@ -1097,6 +1101,11 @@ def get_datamodule(args, for_generation=False, dataset_override=None):
             **common_kwargs,
         )
         dm = CamelDataModule(config, for_generation=for_generation)
+    elif "beaverTails" in dataset:
+        config = BeaverTailsUnsafeDataConfig(
+            **common_kwargs,
+        )
+        dm = BeaverTailsUsafeDataModule(config, for_generation=for_generation)
     else:
         raise ValueError(f"Unknown dataset {args.dataset}")
     return dm

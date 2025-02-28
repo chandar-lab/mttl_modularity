@@ -560,3 +560,19 @@ class UniformSelector(Selector):
             )
             / len(self.expert_names),
         )
+
+
+@Selector.register("uniform_negation", UniformSelectorConfig)
+class UniformNegation(Selector):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    @forward_with_cache
+    def forward(self, input, **kwargs) -> BatchExpertsSelectorOutput:
+        return ExpertsAndWeightsSelectorOutput(
+            experts=self.expert_names,
+            weights=torch.ones(
+                len(self.expert_names), device=input.device, dtype=input.dtype
+            )
+            / -len(self.expert_names),
+        )

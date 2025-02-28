@@ -27,3 +27,5 @@ einops
 triton
 nltk
 # spops @ git+https://github.com/IST-DASLab/spops.git@main
+hydra-core
+omegaconf

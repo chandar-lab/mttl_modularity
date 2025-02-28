@@ -1,0 +1,79 @@
+expert_training: True
+full_training: False
+merging:
+  do_merge: True
+  type: "uniform"
+wandb:
+  project: "moe"
+  run_name: "unsafe"
+  entity: "sarath-chandar"
+path: "local://test" #"local://trained_Llama-3-8B-Instruct_experts_camel" #EleutherAI/gpt-neo-125m
+train_config:
+  lora_rank: 32
+  lora_alpha: 10.
+  lora_dropout: 0.1
+  weight_decay: 0.0
+  model_modifier: "lora"
+  modify_modules: ".*"
+  modify_layers: "q_proj|v_proj|k_proj"
+  trainable_param_names: ".*lora_[ab].*"
+  num_train_epochs: 5
+  learning_rate: 1e-4 #2e-5 #1e-4 #2e-5 #1e-4
+  micro_batch_size: 1
+  train_batch_size: 16
+  predict_batch_size: 4
+  precision: "bf16"
+  model: "meta-llama/Llama-3.1-8B-Instruct" #"meta-llama/Llama-3.1-8B-Instruct" #"EleutherAI/gpt-neo-125m" #"meta-llama/Llama-3.1-8B-Instruct"
+  model_family: "gpt"
+  optimizer: "adamw"
+  # dataset: "a-safety",
+  warmup_proportion: 0.06
+  max_input_length: 512
+  max_output_length: 512
+  truncation_side: "left"
+  padding: "max_length"
+  truncation: True
+  max_length: 512
+  do_sample: True
+  pipeline_eval_tasks: "all"
+  output_dir: "/tmp/"
+tasks: [
+        "a-safety",
+        # "adversarial_qa_droberta_answer_the_following_q",
+        # "camel-biology",
+        # "beaverTails_unsafe_animal_abuse",
+        # "beaverTails_unsafe_child_abuse",
+        # "beaverTails_unsafe_controversial_topics_politics",
+        # "beaverTails_unsafe_discrimination_stereotype_injustice",
+        # "beaverTails_unsafe_drug_abuse_weapons_banned_substance",
+        # "beaverTails_unsafe_financial_crime_property_crime_theft",
+        # "beaverTails_unsafe_hate_speech_offensive_language",
+        # "beaverTails_unsafe_misinformation_regarding_ethics_laws_and_safety",
+        # "beaverTails_unsafe_non_violent_unethical_behavior",
+        # "beaverTails_unsafe_privacy_violation",
+        # "beaverTails_unsafe_self_harm",
+        # "beaverTails_unsafe_sexually_explicit_adult_content",
+        # "beaverTails_unsafe_terrorism_organized_crime_unsafe",
+        # "beaverTails_unsafe_violence_aiding_and_abetting_incitement",      
+        ]
+evaluation:
+  rouge: True
+  loglikelihood: True
+  safety: True
+bnb_config:
+  bnb_4bit_compute_dtype: bfloat16
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: True
+  load_in_4bit: True
+
+
+
+
+
+
+
+
+
+
+
+
