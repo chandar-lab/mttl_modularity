@@ -22,7 +22,7 @@ import wandb
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from mttl.models.expert_model import ExpertModel, ExpertModelConfig
-from mttl.models.train_utils import train_model
+from mttl.models.train_utils import train_model, train_sft_model
 from functools import wraps
 from transformers import (
     AutoTokenizer,

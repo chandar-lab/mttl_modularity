@@ -18,7 +18,7 @@ module load cuda/12.1.1
 source /home/mila/m/maryam.hashemzadeh/projects/envs/mttl_env_1/bin/activate 
 
 
-# HYDRA_FULL_ERROR=1
+HYDRA_FULL_ERROR=1
 
 # model_path=$1
 # type=$2
@@ -30,7 +30,7 @@ TASK_NAME=$1  # Take task name from command line argument
 
 echo "Running with task: $TASK_NAME"
 
-python main_pipline.py tasks="[$TASK_NAME]" path="local://trained_Llama-3-8B-Instruct_experts_$TASK_NAME"
+python main_pipline.py tasks="[$TASK_NAME]" path="local://trained_Llama-3-8B-Instruct_experts_lora_$TASK_NAME"
 
 # python main_pipline.py
 

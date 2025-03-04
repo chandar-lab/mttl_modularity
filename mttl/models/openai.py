@@ -7,6 +7,12 @@ from typing import Any, List
 
 import numpy as np
 import openai
+from openai import AzureOpenAI, AsyncAzureOpenAI
+
+client = AzureOpenAI(api_key="any",
+api_version=os.environ.get("OPENAI_API_VERSION"))
+aclient = AsyncAzureOpenAI(api_key="any",
+api_version=os.environ.get("OPENAI_API_VERSION"))
 import tiktoken
 from tenacity import (
     retry,
@@ -61,14 +67,12 @@ class GPT:
         self.api_type = os.environ.get("OPENAI_API_TYPE", "openai")
 
         if self.engine == "any":
-            openai.api_base = "http://0.0.0.0:8081"
-            openai.api_key = "any"
-            openai.api_type = "openai"
+            # TODO: The 'openai.api_base' option isn't read in the client API. You will need to pass it when you instantiate the client, e.g. 'OpenAI(base_url="http://0.0.0.0:8081")'
+            # openai.api_base = "http://0.0.0.0:8081"
             self.encoder = tiktoken.encoding_for_model("text-davinci-003")
         else:
             self.encoder = tiktoken.encoding_for_model(self.engine)
 
-        openai.api_version = os.environ.get("OPENAI_API_VERSION")
 
     def encode(self, string):
         return self.encoder.encode(string)
@@ -87,11 +91,11 @@ class GPT:
         stop=stop_after_attempt(100),
         wait=wait_exponential(multiplier=1, min=4, max=10),
         retry=(
-            retry_if_exception_type(openai.error.Timeout)
-            | retry_if_exception_type(openai.error.APIError)
-            | retry_if_exception_type(openai.error.APIConnectionError)
-            | retry_if_exception_type(openai.error.RateLimitError)
-            | retry_if_exception_type(openai.error.ServiceUnavailableError)
+            retry_if_exception_type(openai.Timeout)
+            | retry_if_exception_type(openai.APIError)
+            | retry_if_exception_type(openai.APIConnectionError)
+            | retry_if_exception_type(openai.RateLimitError)
+            | retry_if_exception_type(openai.ServiceUnavailableError)
         ),
     )
     async def aget_chat_completion_response(self, prompt, **kwargs):
@@ -101,26 +105,22 @@ class GPT:
         """
         if openai.api_type == "azure":
             try:
-                response = await openai.ChatCompletion.acreate(
-                    deployment_id=self.engine,
-                    messages=[{"role": "user", "content": prompt}],
-                    **kwargs,
-                )
+                response = await aclient.chat.completions.create(deployment_id=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                **kwargs)
             except openai.InvalidRequestError as e:
                 # Most likely a content filtering error from Azure.
                 logging.warning(str(e))
                 return str(e)
         else:
-            response = await openai.ChatCompletion.acreate(
-                model=self.engine,
-                messages=[{"role": "user", "content": prompt}],
-                **kwargs,
-            )
+            response = await aclient.chat.completions.create(model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            **kwargs)
 
-        if "content" not in response["choices"][0]["message"]:
+        if "content" not in response.choices[0].message:
             return ""
 
-        output = response["choices"][0]["message"]["content"].strip()
+        output = response.choices[0].message.content.strip()
         return output
 
     @retry(
@@ -128,11 +128,11 @@ class GPT:
         stop=stop_after_attempt(100),
         wait=wait_exponential(multiplier=1, min=4, max=10),
         retry=(
-            retry_if_exception_type(openai.error.Timeout)
-            | retry_if_exception_type(openai.error.APIError)
-            | retry_if_exception_type(openai.error.APIConnectionError)
-            | retry_if_exception_type(openai.error.RateLimitError)
-            | retry_if_exception_type(openai.error.ServiceUnavailableError)
+            retry_if_exception_type(openai.Timeout)
+            | retry_if_exception_type(openai.APIError)
+            | retry_if_exception_type(openai.APIConnectionError)
+            | retry_if_exception_type(openai.RateLimitError)
+            | retry_if_exception_type(openai.ServiceUnavailableError)
         ),
     )
     def get_chat_completion_response(self, prompt, **kwargs):
@@ -142,26 +142,22 @@ class GPT:
         """
         if openai.api_type == "azure":
             try:
-                response = openai.ChatCompletion.create(
-                    deployment_id=self.engine,
-                    messages=[{"role": "user", "content": prompt}],
-                    **kwargs,
-                )
+                response = client.chat.completions.create(deployment_id=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                **kwargs)
             except openai.InvalidRequestError as e:
                 # Most likely a content filtering error from Azure.
                 logging.warning(str(e))
                 return str(e)
         else:
-            response = openai.ChatCompletion.create(
-                model=self.engine,
-                messages=[{"role": "user", "content": prompt}],
-                **kwargs,
-            )
+            response = client.chat.completions.create(model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            **kwargs)
 
-        if "content" not in response["choices"][0]["message"]:
+        if "content" not in response.choices[0].message:
             return ""
 
-        output = response["choices"][0]["message"]["content"].strip()
+        output = response.choices[0].message.content.strip()
         return output
 
     @retry(
@@ -169,11 +165,11 @@ class GPT:
         stop=stop_after_attempt(100),
         wait=wait_exponential(multiplier=1, min=4, max=10),
         retry=(
-            retry_if_exception_type(openai.error.Timeout)
-            | retry_if_exception_type(openai.error.APIError)
-            | retry_if_exception_type(openai.error.APIConnectionError)
-            | retry_if_exception_type(openai.error.RateLimitError)
-            | retry_if_exception_type(openai.error.ServiceUnavailableError)
+            retry_if_exception_type(openai.Timeout)
+            | retry_if_exception_type(openai.APIError)
+            | retry_if_exception_type(openai.APIConnectionError)
+            | retry_if_exception_type(openai.RateLimitError)
+            | retry_if_exception_type(openai.ServiceUnavailableError)
         ),
     )
     def get_completion_response(
@@ -191,12 +187,10 @@ class GPT:
         logging.debug(kwargs)
 
         try:
-            response = openai.Completion.create(
-                engine=self.engine,
-                prompt=prompt_batch,
-                logprobs=top_logprobs or 1,
-                **kwargs,
-            )
+            response = client.completions.create(model=self.model,
+            prompt=prompt_batch,
+            logprobs=top_logprobs or 1,
+            **kwargs)
         except openai.InvalidRequestError as e:
             # Most likely a content filtering error from Azure.
             if "filtering" in str(e):
@@ -205,16 +199,14 @@ class GPT:
                 response = {"choices": []}
                 for prompt in prompt_batch:
                     try:
-                        response["choices"].append(
-                            openai.Completion.create(
-                                engine=self.engine,
-                                prompt=prompt,
-                                logprobs=top_logprobs or 1,
-                                **kwargs,
-                            )["choices"][0]
+                        response.choices.append(
+                            client.completions.create(model=self.model,
+                            prompt=prompt,
+                            logprobs=top_logprobs or 1,
+                            **kwargs)["choices"][0]
                         )
                     except openai.InvalidRequestError as e:
-                        response["choices"].append(
+                        response.choices.append(
                             {
                                 "text": str(e),
                                 "logprobs": {
@@ -230,18 +222,18 @@ class GPT:
         output = []
         nlls = []
         lengths = []
-        for response in response["choices"]:
-            output.append(response["text"].strip())
+        for response in response.choices:
+            output.append(response.text.strip())
             if raw_logprobs:
-                nlls.append(response["logprobs"]["token_logprobs"])
-                lengths.append(response["logprobs"]["tokens"])
+                nlls.append(response.logprobs.token_logprobs)
+                lengths.append(response.logprobs.tokens)
             elif top_logprobs:
-                nlls.append(response["logprobs"]["top_logprobs"])
-                lengths.append(response["logprobs"]["tokens"])
+                nlls.append(response.logprobs.top_logprobs)
+                lengths.append(response.logprobs.tokens)
             else:
-                if "token_logprobs" in response["logprobs"]:
-                    nlls.append(sum(response["logprobs"]["token_logprobs"]))
-                    lengths.append(len(response["logprobs"]["token_logprobs"]))
+                if "token_logprobs" in response.logprobs:
+                    nlls.append(sum(response.logprobs.token_logprobs))
+                    lengths.append(len(response.logprobs.token_logprobs))
                 else:
                     nlls.append(-np.inf)
                     lengths.append(1)

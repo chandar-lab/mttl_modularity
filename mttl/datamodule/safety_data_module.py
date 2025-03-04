@@ -47,6 +47,10 @@ class SafetyDataModule(DataModule):
             map_example,
             num_proc=n_proc,
         )
+        # self.test_dataset = dataset["test"].select(range(20)).map(
+        #     map_example,
+        #     num_proc=n_proc,
+        # )
 
 
 
