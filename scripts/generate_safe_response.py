@@ -68,7 +68,7 @@ def process_csv(file_path):
         return
 
     df = df.head(1)
-    df.response = df['prompt'].apply(get_gpt_response)
+    df.response = df['prompt'].apply(generate_response)
     df['is_safe'] = True  # Set is_safe to True
 
 

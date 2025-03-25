@@ -22,7 +22,7 @@ import wandb
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from mttl.models.expert_model import ExpertModel, ExpertModelConfig
-from mttl.models.train_utils import train_model, train_sft_model
+from mttl.models.train_utils import train_model, my_train_model, my_train_model_acce, train_sft_model
 from functools import wraps
 from transformers import (
     AutoTokenizer,
@@ -30,6 +30,7 @@ from transformers import (
     BitsAndBytesConfig,
     TrainingArguments,
 )
+from accelerate import Accelerator
 
 
 print(torch.cuda.device_count())  # Should print 4
@@ -37,19 +38,41 @@ print([torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())])
 device = "cuda" if torch.cuda.is_available() else "cpu"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
+import signal
+import sys
+import time
+
+
+
+
 
 @hydra.main(config_path=".", config_name="config", version_base=None)
 def local_train(cfg: DictConfig):
     # os.environ["WANDB_PROJECT"] = "gpv"
     # os.environ["WANDB_LOG_MODEL"] = "tests"
 
+    # if cfg.path.startswith("local://"):
+        # physical_path = os.path.abspath(cfg.path.replace("local://", "trained_models/"))
+    os.makedirs(cfg.path, exist_ok=True)
+        # cfg.path = physical_path
+
+
     wandb_run = wandb.init(
         project=cfg.wandb.project,
         entity=cfg.wandb.entity,
         name=cfg.wandb.run_name,
-        config=OmegaConf.to_container(cfg, resolve=True)  # Log entire config
+        config=OmegaConf.to_container(cfg, resolve=True),
+        resume="allow"
     )
 
+    # Fetch from command line arguments or Hydra config
+    checkpoint_path = cfg.checkpoint_path
+    resume_from_checkpoint = cfg.resume_from_checkpoint
+
+    if resume_from_checkpoint:
+        print("Resuming from checkpoint.")
+    else:
+        print("Starting fresh training.")
 
     # # Model and Tokenizer
     # model_id = cfg.model.model_id
@@ -63,8 +86,17 @@ def local_train(cfg: DictConfig):
     train_config = ExpertConfig.from_dict({**cfg.train_config})
     train_config.wandb = wandb_run
     
-
-    library = ExpertLibrary.get_expert_library(cfg.path, create=True)
+    library_path = os.path.dirname(os.path.abspath(__file__)) +'/'+ cfg.path.split('local://')[1]
+    if os.path.exists(library_path):
+        # cfg.path='scripts/local:/trained_Llama-3-8B-Instruct_experts_lora_beaverTails_unsafe_controversial_topics_politics_uniform'
+        # path = cfg.path.replace('//', '/')
+        # library_path = f'scripts/{path}'
+        
+        library = ExpertLibrary.get_expert_library(library_path, expert_library_type="local")
+    else:
+        library_path = cfg.path
+        library = ExpertLibrary.get_expert_library(cfg.path, create=True)
+    
 
     # wandb_run.log({"expert_training": cfg.expert_training})
     # wandb_run.log({"full_training": cfg.full_training})
@@ -91,7 +123,9 @@ def local_train(cfg: DictConfig):
             # if not os.path.exists(cfg.path.split('local://')[1]): ###
             print("........ training .........", task)
             # minimal training code to finetune the model on examples from the task
-            train_model(train_config, model, get_datamodule(train_config))
+            # my_train_model(train_config, model, get_datamodule(train_config),  checkpoint_path=checkpoint_path, resume_from_checkpoint=resume_from_checkpoint)
+            my_train_model_acce(train_config, model, get_datamodule(train_config),  checkpoint_path=checkpoint_path, resume_from_checkpoint=resume_from_checkpoint) 
+            # train_model(train_config, model, get_datamodule(train_config),  checkpoint_path=checkpoint_path, resume_from_checkpoint=resume_from_checkpoint)
             # add the expert to the library!
             expert_instance = model.as_expert(training_config=train_config.to_dict())
             library.add_expert(expert_instance, force=True)
@@ -119,7 +153,7 @@ def local_train(cfg: DictConfig):
             # if not os.path.exists(cfg.path.split('local://')[1]): ###
             print("........ training .........", task)
             # minimal training code to finetune the model on examples from the task
-            train_model(train_config, model, get_datamodule(train_config))
+            my_train_model(train_config, model, get_datamodule(train_config))
             # add the expert to the library!
             expert_instance = model.as_expert(training_config=train_config.to_dict())
             library.add_expert(expert_instance, force=True)
@@ -128,7 +162,7 @@ def local_train(cfg: DictConfig):
                 print("Expert: ", expert_name, " with config: ", library[expert_name].expert_config)
             print("Experts in library:", len(library))
         
-        else:
+        elif cfg.no_training:
             model = AutoModelForCausalLM.from_pretrained(
                 train_config.model,
                 device_map=device,
@@ -140,13 +174,14 @@ def local_train(cfg: DictConfig):
 
 
 
-
+ 
     ## merged models
-    if cfg.merging.do_merge and cfg.expert_training:
+    if cfg.merging.do_merge:
         print("........ merging .........")
-        merge_experts(library_path=cfg.path, type=cfg.merging.type)
+        model = merge_experts(library=library, library_path=library_path,  type=cfg.merging.type)
         # merged_model
-        model = MultiExpertModel.from_pretrained(f"{cfg.path}_{cfg.merging.type}", device_map="cuda", precision="32")
+        # model = MultiExpertModel.from_pretrained(f"{cfg.path}_{cfg.merging.type}", device_map="cuda", precision="32")
+        model = MultiExpertModel.from_pretrained(f"{library_path}_{cfg.merging.type}", device_map="cuda", precision="32")
     
     ## evaluation
     # if cfg.evaluation.rouge:
@@ -208,7 +243,7 @@ def train_sft(cfg, train_config, datamodule, wandb_run):
 
 
 
-def merge_experts(library_path=None, type='uniform'):
+def merge_experts(library=None, library_path=None, type='uniform'):
 
     if type == 'arrow':
         arrow_transform_config = ArrowTransformConfig()
@@ -232,13 +267,14 @@ def merge_experts(library_path=None, type='uniform'):
     
     
     model = MultiExpertModel.from_pretrained_library(
-        library_path,
+        library,
         selector_config=selector_config,
         device_map=device
         )
     
     # save model + selector for future re-use
     model.save_pretrained(f"{library_path}_{type}")
+    return model
 
 
 

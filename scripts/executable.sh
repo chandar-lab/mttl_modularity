@@ -49,5 +49,12 @@ do
 done
 
 
+# sbatch run.sh "camel-biology"
+# sbatch run_timeout.sh "camel-biology"
+
+sbatch run_resumable.sh "beaverTails_unsafe_controversial_topics_politics" "meta-llama/Llama-3.1-8B-Instruct"
+
+
+
 
 

@@ -35,15 +35,15 @@ class SafetyDataModule(DataModule):
         # NEED check hard coding
         self.for_generation = True
         
-        self.train_dataset = dataset["train"].select(range(20)).map(
+        self.train_dataset = dataset["train"].select(range(200)).map(
             map_example,
             num_proc=n_proc,
         )
-        self.dev_dataset = dataset["validation"].select(range(20)).map(
+        self.dev_dataset = dataset["validation"].select(range(200)).map(
             map_example,
             num_proc=n_proc,
         )
-        self.test_dataset = dataset["test"].select(range(20)).map(
+        self.test_dataset = dataset["test"].select(range(200)).map(
             map_example,
             num_proc=n_proc,
         )

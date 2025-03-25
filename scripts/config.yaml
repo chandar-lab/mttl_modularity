@@ -1,5 +1,6 @@
 expert_training: True
 full_training: False
+no_training: False
 merging:
   do_merge: True
   type: "uniform"
@@ -7,11 +8,11 @@ wandb:
   project: "moe"
   run_name: "unsafe"
   entity: "sarath-chandar"
-path: "local://test" #"local://trained_Llama-3-8B-Instruct_experts_camel" #EleutherAI/gpt-neo-125m
+path: "local://testil" #"local://trained_Llama-3-8B-Instruct_experts_lora_beaverTails_unsafe_controversial_topics_politics" #"local://test" #"local://trained_Llama-3-8B-Instruct_experts_camel" #EleutherAI/gpt-neo-125m
 train_config:
-  lora_rank: 32
-  lora_alpha: 10.
-  lora_dropout: 0.1
+  lora_rank: 16 #32
+  # lora_alpha: 10.
+  lora_dropout: 0.05 #0.1
   weight_decay: 0.0
   model_modifier: "lora"
   modify_modules: ".*"
@@ -23,7 +24,7 @@ train_config:
   train_batch_size: 16
   predict_batch_size: 4
   precision: "bf16"
-  model: "meta-llama/Llama-3.1-8B-Instruct" #"meta-llama/Llama-3.1-8B-Instruct" #"EleutherAI/gpt-neo-125m" #"meta-llama/Llama-3.1-8B-Instruct"
+  model: "EleutherAI/gpt-neo-125m" #"meta-llama/Llama-3.1-8B-Instruct" #"meta-llama/Llama-3.1-8B-Instruct" #"EleutherAI/gpt-neo-125m" #"meta-llama/Llama-3.1-8B-Instruct"
   model_family: "gpt"
   optimizer: "adamw"
   # dataset: "a-safety",
@@ -37,10 +38,12 @@ train_config:
   do_sample: True
   pipeline_eval_tasks: "all"
   output_dir: "/tmp/"
+  save_every: 1000
+  eval_every: 200
 tasks: [
-        "a-safety",
+        # "a-safsety",
         # "adversarial_qa_droberta_answer_the_following_q",
-        # "camel-biology",
+        "camel-biology",
         # "beaverTails_unsafe_animal_abuse",
         # "beaverTails_unsafe_child_abuse",
         # "beaverTails_unsafe_controversial_topics_politics",
@@ -56,6 +59,8 @@ tasks: [
         # "beaverTails_unsafe_terrorism_organized_crime_unsafe",
         # "beaverTails_unsafe_violence_aiding_and_abetting_incitement",      
         ]
+checkpoint_path: ${path}
+resume_from_checkpoint: False
 evaluation:
   rouge: True
   loglikelihood: True
