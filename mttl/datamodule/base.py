@@ -1101,7 +1101,7 @@ def get_datamodule(args, for_generation=False, dataset_override=None):
             **common_kwargs,
         )
         dm = CamelDataModule(config, for_generation=for_generation)
-    elif "beaverTails" in dataset:
+    elif "beaverTails_unsafe" in dataset:
         config = BeaverTailsUnsafeDataConfig(
             **common_kwargs,
         )

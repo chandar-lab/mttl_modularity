@@ -269,7 +269,8 @@ class SafetyEvaluator(Evaluator):
                 metrics = {
                     "accuracy": asr,
                     "max_harm_ratio": jailbroken_num,
-                    "detailed_results": len(all_outputs)
+                    "detailed_results": len(all_outputs),
+                    "generated_response": all_outputs,
                 }
 
         # Evaluate safety using GPT-4 judge if enabled

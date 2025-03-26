@@ -189,3 +189,7 @@ local:/
 rouge_output/
 safety_output/
 test/
+scripts/test_uniform/
+scripts/test/
+scripts/out_ckpt/
+mttl.models.library.expert_library/

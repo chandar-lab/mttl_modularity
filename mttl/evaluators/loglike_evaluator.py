@@ -47,10 +47,10 @@ class LogLikeEvaluator(Evaluator):
                 break
 
             labels_index = batch.pop("labels_index", None)
-            num_options = batch.pop("num_options")
+            num_options = batch.pop("num_options", None)
             labels_texts = batch.pop("labels_texts")
             sources_texts = batch.pop("sources_texts")
-            batch_size = len(labels_index)
+            batch_size = len(sources_texts)
 
             batch = transfer_batch_to_device(batch, device)
 
@@ -73,14 +73,23 @@ class LogLikeEvaluator(Evaluator):
                 if loss_per_option.dtype in [torch.bfloat16, torch.float16]:
                     loss_per_option = loss_per_option.float().numpy()
 
-                loss_per_example = [
-                    loss_per_option[
-                        int(np.sum(num_options[:i])) : int(np.sum(num_options[: i + 1]))
-                    ]
-                    for i in range(batch_size)
-                ]
+                loss_per_example = []
+                if num_options is not None: 
+                    loss_per_example = [
+                            loss_per_option[
+                                int(np.sum(num_options[:i])) : int(np.sum(num_options[: i + 1]))
+                            ]
+                            for i in range(batch_size)
+                        ]
+                else:
+                    loss_per_example = [
+                            loss_per_option[ i]
+                            for i in range(batch_size)
+                        ]
+
+
                 predictions = [
-                    np.argmin(option_loss) for option_loss in loss_per_example
+                     np.argmin(option_loss) for option_loss in loss_per_example
                 ]
 
                 all_predictions.extend(predictions)
@@ -93,7 +102,7 @@ class LogLikeEvaluator(Evaluator):
 
             if verbose:
                 logger.info("Sources:\n%s", sources_texts[0])
-                logger.info("Label:\n%s", labels_texts[labels_index[0]])
+                # logger.info("Label:\n%s", labels_texts[labels_index[0]])
                 logger.info("Prediction:\n%s", labels_texts[predictions[0]])
 
             if all_accuracies:
@@ -107,4 +116,5 @@ class LogLikeEvaluator(Evaluator):
         }
 
         self.save_metrics(metrics, output_path)
-        return metrics["accuracy"]
+        # return metrics["accuracy"]
+        return metrics
