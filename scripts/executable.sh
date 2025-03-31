@@ -54,7 +54,14 @@ done
 
 sbatch run_resumable.sh "beaverTails_unsafe_controversial_topics_politics" "meta-llama/Llama-3.1-8B-Instruct"
 
+sbatch run_goodtogo.sh "beaverTails_unsafe_controversial_topics_politics" "meta-llama/Llama-3.1-8B-Instruct"
+sbatch run_goodtogo.sh "beaverTails_unsafe_controversial_topics_politics" 'meta-llama/Llama-3.1-8B'
+sbatch run_goodtogo.sh "beaverTails_unsafe_discrimination_stereotype_injustice" "EleutherAI/gpt-neo-125m"
+sbatch run_goodtogo.sh "beaverTails_unsafe_controversial_topics_politics" "EleutherAI/gpt-neo-125m"
 
+
+
+sbatch run_resumable.sh "beaverTails_unsafe_controversial_topics_politics" "meta-llama/Llama-3.2-3B-Instruct"
 
 
 

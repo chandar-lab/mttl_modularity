@@ -8,17 +8,17 @@ wandb:
   project: "moe"
   run_name: "unsafe"
   entity: "sarath-chandar"
-path: "local://testil" #"local://trained_Llama-3-8B-Instruct_experts_lora_beaverTails_unsafe_controversial_topics_politics" #"local://test" #"local://trained_Llama-3-8B-Instruct_experts_camel" #EleutherAI/gpt-neo-125m
+path: "local://trained_EleutherAI/gpt-neo-125m_experts_lora_beaverTails_unsafe_controversial_topics_politics" #"local://trained_Llama-3-8B-Instruct_experts_lora_beaverTails_unsafe_controversial_topics_politics" #"local://test" #"local://trained_Llama-3-8B-Instruct_experts_camel" #EleutherAI/gpt-neo-125m
 train_config:
-  lora_rank: 16 #32
-  # lora_alpha: 10.
+  lora_rank: 16 #16 #32
+  # lora_alpha: 64 #10. 2r
   lora_dropout: 0.05 #0.1
   weight_decay: 0.0
   model_modifier: "lora"
   modify_modules: ".*"
   modify_layers: "q_proj|v_proj|k_proj"
   trainable_param_names: ".*lora_[ab].*"
-  num_train_epochs: 5
+  num_train_epochs: 10
   learning_rate: 2e-5 #2e-5 #1e-4 #2e-5 #1e-4
   micro_batch_size: 1
   train_batch_size: 16
@@ -38,13 +38,13 @@ train_config:
   do_sample: True
   pipeline_eval_tasks: "all"
   output_dir: "/tmp/"
-  save_every: 1000
+  save_every: 3000
   eval_every: 200
 tasks: [
         # "a-safsety",
         # "adversarial_qa_droberta_answer_the_following_q",
-        "camel-biology",
-        # "beaverTails_unsafe_animal_abuse",
+        # "camel-biology",
+        "beaverTails_unsafe_animal_abuse",
         # "beaverTails_unsafe_child_abuse",
         # "beaverTails_unsafe_controversial_topics_politics",
         # "beaverTails_unsafe_discrimination_stereotype_injustice",
@@ -59,7 +59,7 @@ tasks: [
         # "beaverTails_unsafe_terrorism_organized_crime_unsafe",
         # "beaverTails_unsafe_violence_aiding_and_abetting_incitement",      
         ]
-checkpoint_path: ${path}
+checkpoint_path: "scripts/out_ckpt/EleutherAI/gpt-neo-125m_beaverTails_unsafe_controversial_topics_politics_ckpt_2/" #${path}
 resume_from_checkpoint: False
 evaluation:
   rouge: True

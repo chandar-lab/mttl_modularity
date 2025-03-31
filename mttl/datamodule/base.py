@@ -561,6 +561,7 @@ class DataModule(LightningDataModule, Registrable):
             pin_memory=True,
             persistent_workers=False,
             collate_fn=self.collate_fn,
+            drop_last=True,
         )
 
     def val_dataloader(self, subsample=None, shuffle=False):
@@ -576,7 +577,7 @@ class DataModule(LightningDataModule, Registrable):
             pin_memory=False,
             persistent_workers=False,
             collate_fn=self.collate_fn,
-            drop_last=False,
+            drop_last=True,
         )
 
     def test_dataloader(self, subsample=None, shuffle=False):
@@ -592,7 +593,7 @@ class DataModule(LightningDataModule, Registrable):
             pin_memory=False,
             persistent_workers=False,
             collate_fn=self.collate_fn,
-            drop_last=False,
+            drop_last=True,
         )
 
     @property
