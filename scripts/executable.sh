@@ -61,6 +61,16 @@ sbatch run_goodtogo.sh "beaverTails_unsafe_controversial_topics_politics" "Eleut
 
 
 
+sbatch run_one.sh "beaverTails_unsafe_controversial_topics_politics" "meta-llama/Llama-3.1-8B-Instruct"
+
+sbatch run_one.sh "beaverTails_unsafe_drug_abuse_weapons_banned_substance" "meta-llama/Llama-3.1-8B-Instruct"
+
+sbatch run_one.sh "beaverTails_unsafe_hate_speech_offensive_language" "meta-llama/Llama-3.1-8B-Instruct"
+
+
+"beaverTails_sampled_unsafe_controversial_topics_politics"
+
+
 sbatch run_resumable.sh "beaverTails_unsafe_controversial_topics_politics" "meta-llama/Llama-3.2-3B-Instruct"
 
 

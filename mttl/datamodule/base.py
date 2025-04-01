@@ -986,6 +986,7 @@ def get_datamodule(args, for_generation=False, dataset_override=None):
         BeaverTailsUnsafeDataConfig,
         BeaverTailsUsafeDataModule,
     )
+    from mttl.datamodule.beavertails_sampled_module import (BeaverTailsSampledDataConfig, BeaverTailsSampledDataModule)
 
     # if we have a DataArgs object, we can directly create the datamodule
     if isinstance(args, DataArgs) and args.dataset_type is not None:
@@ -1107,6 +1108,11 @@ def get_datamodule(args, for_generation=False, dataset_override=None):
             **common_kwargs,
         )
         dm = BeaverTailsUsafeDataModule(config, for_generation=for_generation)
+    elif "beaverTails_sampled" in dataset:
+        config = BeaverTailsSampledDataConfig(
+            **common_kwargs,
+        )
+        dm = BeaverTailsSampledDataModule(config, for_generation=for_generation)
     else:
         raise ValueError(f"Unknown dataset {args.dataset}")
     return dm

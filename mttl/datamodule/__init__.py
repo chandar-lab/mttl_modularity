@@ -22,4 +22,5 @@ from mttl.datamodule.winogrande_data_module import (
     WinograndeMultiChoiceDataModule,
 )
 from mttl.datamodule.safety_data_module import (SafetyDataConfig, SafetyDataModule)
-from mttl.datamodule.camel_data_module import (CamelDataConfig, CamelDataModule) 
+from mttl.datamodule.camel_data_module import (CamelDataConfig, CamelDataModule)
+from mttl.datamodule.beavertails_sampled_module import (BeaverTailsSampledDataConfig, BeaverTailsSampledDataModule) 
