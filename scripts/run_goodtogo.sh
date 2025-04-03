@@ -32,7 +32,7 @@ MODEL=$2
 # CHECKPOINT_PATH="out_ckpt/${SLURM_JOB_ID}_${TASK_NAME}_ckpt/"
 # CHECKPOINT_PATH="out_ckpt/${SLURM_JOB_NAME}_ckpt.pth"
 CHECKPOINT_PATH="out_ckpt/${MODEL}_${TASK_NAME}_ckpt/"
-LAST_CHECKPOINT="${CHECKPOINT_PATH}checkpoint-10/"
+LAST_CHECKPOINT="${CHECKPOINT_PATH}checkpoint-9/"
 echo "............ LAST_CHECKPOINT ....... ${LAST_CHECKPOINT}"
 
 # # Trap signal and requeue the job

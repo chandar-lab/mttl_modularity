@@ -491,18 +491,18 @@ def save_checkpoint_acce(accelerator, model, optimizer, scheduler, epoch, global
 
     # Only main process does metadata stuff
     if accelerator.is_main_process:
-        try:
-            client_state = {
-                "epoch": epoch,
-                "step": global_step,
-                "wandb_run_id": wandb_run.id if wandb_run else None
-            }
-            with open(os.path.join(checkpoint_dir, "client_state.json"), "w") as f:
-                json.dump(client_state, f)
+        # try:
+        client_state = {
+            "epoch": epoch,
+            "step": global_step,
+            "wandb_run_id": wandb_run.id if wandb_run else None
+        }
+        with open(os.path.join(checkpoint_dir, "client_state.json"), "w") as f:
+            json.dump(client_state, f)
 
-            accelerator.print(f"Checkpoint saved to {checkpoint_dir}")
-        except Exception as e:
-            accelerator.print(f"Failed writing client_state.json: {repr(e)}")
+        accelerator.print(f"Checkpoint saved to {checkpoint_dir}")
+        # except Exception as e:
+        #     accelerator.print(f"Failed writing client_state.json: {repr(e)}")
 
 
 def get_latest_checkpoint_file(checkpoint_dir):
@@ -826,11 +826,12 @@ def my_train_model_acce(args, model, datamodule, do_test=False, checkpoint_path=
 
     print(" -------------- total_steps is: -------------", total_steps, len(dataloader), args.gradient_accumulation_steps)
 
-
+    warmup_ratio = 0.03
+    num_warmup_steps = int(total_steps * warmup_ratio)  
     scheduler = get_scheduler(
             name="linear",  # or "cosine", etc.
             optimizer=optimizer,
-            num_warmup_steps=args.warmup_steps,
+            num_warmup_steps=num_warmup_steps,
             num_training_steps=total_steps
         )
 
@@ -858,7 +859,8 @@ def my_train_model_acce(args, model, datamodule, do_test=False, checkpoint_path=
                 entity=args.wandb.entity,
                 name=args.wandb.name,
                 resume="allow",
-                id=wandb_run_id
+                id=wandb_run_id,
+                reinit = True,
             )
         print(f"Resumed from epoch {start_epoch}, step {global_step}")
 

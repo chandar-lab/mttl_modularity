@@ -68,6 +68,17 @@ sbatch run_one.sh "beaverTails_unsafe_drug_abuse_weapons_banned_substance" "meta
 sbatch run_one.sh "beaverTails_unsafe_hate_speech_offensive_language" "meta-llama/Llama-3.1-8B-Instruct"
 
 
+
+sbatch run_one.sh "beaverTails_sampled_unsafe_controversial_topics_politics" "meta-llama/Llama-3.1-8B-Instruct"
+sbatch run_one.sh "beaverTails_sampled_unsafe_drug_abuse_weapons_banned_substance" "meta-llama/Llama-3.1-8B-Instruct"
+sbatch run_one.sh "beaverTails_sampled_unsafe_hate_speech_offensive_language" "meta-llama/Llama-3.1-8B-Instruct"
+
+sbatch run_one.sh "beaverTails_sampled_safe_gpt4_controversial_topics_politics" "meta-llama/Llama-3.1-8B-Instruct"
+sbatch run_one.sh "beaverTails_sampled_safe_gpt4_drug_abuse_weapons_banned_substance" "meta-llama/Llama-3.1-8B-Instruct"
+sbatch run_one.sh "beaverTails_sampled_safe_gpt4_hate_speech_offensive_language" "meta-llama/Llama-3.1-8B-Instruct"
+
+
+
 "beaverTails_sampled_unsafe_controversial_topics_politics"
 
 

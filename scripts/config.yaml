@@ -10,7 +10,7 @@ wandb:
   entity: "sarath-chandar"
 path: "local://trained_EleutherAI/gpt-neo-125m_experts_lora_beaverTails_unsafe_controversial_topics_politics" #"local://trained_Llama-3-8B-Instruct_experts_lora_beaverTails_unsafe_controversial_topics_politics" #"local://test" #"local://trained_Llama-3-8B-Instruct_experts_camel" #EleutherAI/gpt-neo-125m
 train_config:
-  lora_rank: 16 #16 #32
+  lora_rank: 32 #16 #32
   # lora_alpha: 64 #10. 2r
   lora_dropout: 0.05 #0.1
   weight_decay: 0.0
@@ -25,7 +25,7 @@ train_config:
   train_batch_size: 16
   predict_batch_size: 4
   precision: "bf16"
-  model: "EleutherAI/gpt-neo-125m" #"meta-llama/Llama-3.1-8B-Instruct" #"meta-llama/Llama-3.1-8B-Instruct" #"EleutherAI/gpt-neo-125m" #"meta-llama/Llama-3.1-8B-Instruct"
+  model: "meta-llama/Llama-3.2-1B-Instruct" #"meta-llama/Llama-3.2-1B-Instruct"  "meta-llama/Llama-3.1-8B-Instruct" #"meta-llama/Llama-3.1-8B-Instruct" #"EleutherAI/gpt-neo-125m" #"meta-llama/Llama-3.1-8B-Instruct"
   model_family: "gpt"
   optimizer: "adamw"
   # dataset: "a-safety",
@@ -59,7 +59,8 @@ tasks: [
         # "beaverTails_unsafe_sexually_explicit_adult_content",
         # "beaverTails_unsafe_terrorism_organized_crime_unsafe",
         # "beaverTails_unsafe_violence_aiding_and_abetting_incitement",
-        "beaverTails_sampled_unsafe_controversial_topics_politics",      
+        # "beaverTails_sampled_unsafe_controversial_topics_politics", 
+        "beaverTails_sampled_safe_gpt4_controversial_topics_politics",     
         ]
 checkpoint_path: "scripts/out_ckpt/EleutherAI/gpt-neo-125m_beaverTails_unsafe_controversial_topics_politics_ckpt_2/" #${path}
 resume_from_checkpoint: False

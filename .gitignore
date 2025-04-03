@@ -193,3 +193,6 @@ scripts/test_uniform/
 scripts/test/
 scripts/out_ckpt/
 mttl.models.library.expert_library/
+out_ckpt/
+scripts/scripts/
+typescript
